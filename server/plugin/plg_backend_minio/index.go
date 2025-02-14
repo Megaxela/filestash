@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -16,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/minio/minio-go/v7"
+	cr "github.com/minio/minio-go/v7/pkg/credentials"
 	. "github.com/mickael-kerjean/filestash/server/common"
 
 	"io"
@@ -28,7 +29,7 @@ import (
 var MinioCache AppCache
 
 type MinioBackend struct {
-	client     *s3.Minio
+	client     *s3.S3
 	config     *aws.Config
 	params     map[string]string
 	Context    context.Context
@@ -41,6 +42,22 @@ func init() {
 }
 
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
+	// Performing minio ldap authentication
+	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
+	if err != nil {
+		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
+	}
+
+	v, err := li.GetWithContext(nil)
+	if err != nil {
+		return nil, NewError(fmt.Sprintf("Unable to retrieve STS credentials: %v", err), 400);
+	}
+
+	params["access_key_id"] = v.AccessKeyID;
+	params["secret_access_key"] = v.SecretAccessKey;
+	params["session_token"] = v.SessionToken;
+
+	// Continuing with normal S3 flow
 	if params["encryption_key"] != "" && len(params["encryption_key"]) != 32 {
 		return nil, NewError(fmt.Sprintf("Encryption key needs to be 32 characters (current: %d)", len(params["encryption_key"])), 400)
 	}
@@ -103,24 +120,24 @@ func (this MinioBackend) LoginForm() Form {
 			FormElement{
 				Name:  "type",
 				Type:  "hidden",
-				Value: "s3",
+				Value: "minio-s3",
 			},
 			FormElement{
-				Name:        "access_key_id",
+				Name:        "username",
 				Type:        "text",
-				Placeholder: "Access Key ID*",
+				Placeholder: "Username*",
 			},
 			FormElement{
 				Name:        "secret_access_key",
 				Type:        "password",
-				Placeholder: "Secret Access Key*",
+				Placeholder: "Password*",
 			},
 			FormElement{
 				Name:        "advanced",
 				Type:        "enable",
 				Placeholder: "Advanced",
 				Target: []string{
-					"s3_region", "s3_endpoint", "s3_role_arn", "s3_session_token",
+					"s3_region", "s3_endpoint", "s3_role_arn",
 					"s3_path", "s3_encryption_key", "s3_number_thread",
 				},
 			},
@@ -141,12 +158,6 @@ func (this MinioBackend) LoginForm() Form {
 				Name:        "role_arn",
 				Type:        "text",
 				Placeholder: "Role ARN",
-			},
-			FormElement{
-				Id:          "s3_session_token",
-				Name:        "session_token",
-				Type:        "text",
-				Placeholder: "Session Token",
 			},
 			FormElement{
 				Id:          "s3_path",
