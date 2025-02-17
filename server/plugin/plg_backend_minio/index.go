@@ -122,7 +122,7 @@ func (this MinioBackend) LoginForm() Form {
 			FormElement{
 				Name:  "type",
 				Type:  "hidden",
-				Value: "minio-s3",
+				Value: "minio",
 			},
 			FormElement{
 				Name:        "username",
