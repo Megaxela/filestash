@@ -41,7 +41,7 @@ func init() {
 }
 
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
-     Log.Info("[minio] Initializing");
+     Log.Error("[minio] Initializing");
 	// Performing minio ldap authentication
 	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
 	if err != nil {
@@ -184,7 +184,7 @@ func (this MinioBackend) LoginForm() Form {
 }
 
 func (this MinioBackend) Meta(path string) Metadata {
-     Log.Info("[minio] Metadata");
+     Log.Error("[minio] Metadata");
 	if path == "/" {
 		return Metadata{
 			CanCreateFile: NewBool(false),
@@ -197,7 +197,7 @@ func (this MinioBackend) Meta(path string) Metadata {
 }
 
 func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
-     Log.Info("[minio] Ls");
+     Log.Error("[minio] Ls");
 	files = make([]os.FileInfo, 0)
 	p := this.path(path)
 	if p.bucket == "" {
@@ -253,7 +253,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 }
 
 func (this MinioBackend) Cat(path string) (io.ReadCloser, error) {
-     Log.Info("[minio] Cat");
+     Log.Error("[minio] Cat");
 	p := this.path(path)
 	client := s3.New(this.createSession(p.bucket))
 	input := &s3.GetObjectInput{
@@ -286,7 +286,7 @@ func (this MinioBackend) Cat(path string) (io.ReadCloser, error) {
 }
 
 func (this MinioBackend) Mkdir(path string) error {
-     Log.Info("[minio] Mkdir");
+     Log.Error("[minio] Mkdir");
 	p := this.path(path)
 	client := s3.New(this.createSession(p.bucket))
 	if p.path == "" {
@@ -303,7 +303,7 @@ func (this MinioBackend) Mkdir(path string) error {
 }
 
 func (this MinioBackend) Rm(path string) error {
-     Log.Info("[minio] Rm");
+     Log.Error("[minio] Rm");
 	p := this.path(path)
 	client := s3.New(this.createSession(p.bucket))
 	if p.bucket == "" {
@@ -375,7 +375,7 @@ func (this MinioBackend) Rm(path string) error {
 }
 
 func (this MinioBackend) Mv(from string, to string) error {
-     Log.Info("[minio] Mv");
+     Log.Error("[minio] Mv");
 	if from == to {
 		return nil
 	}
@@ -484,7 +484,7 @@ func (this MinioBackend) Mv(from string, to string) error {
 }
 
 func (this MinioBackend) Touch(path string) error {
-     Log.Info("[minio] Touch");
+     Log.Error("[minio] Touch");
 	p := this.path(path)
 	client := s3.New(this.createSession(p.bucket))
 	if p.bucket == "" {
@@ -506,7 +506,7 @@ func (this MinioBackend) Touch(path string) error {
 }
 
 func (this MinioBackend) Save(path string, file io.Reader) error {
-     Log.Info("[minio] Save");
+     Log.Error("[minio] Save");
 	p := this.path(path)
 	if p.bucket == "" {
 		return ErrNotValid
@@ -527,7 +527,7 @@ func (this MinioBackend) Save(path string, file io.Reader) error {
 }
 
 func (this MinioBackend) createSession(bucket string) *session.Session {
-     Log.Info("[minio] Create Session");
+     Log.Error("[minio] Create Session");
 	newParams := map[string]string{"bucket": bucket}
 	for k, v := range this.params {
 		newParams[k] = v
@@ -560,7 +560,7 @@ type MinioPath struct {
 }
 
 func (s MinioBackend) path(p string) MinioPath {
-     Log.Info("[minio] Path");
+     Log.Error("[minio] Path");
 	sp := strings.Split(p, "/")
 	bucket := ""
 	if len(sp) > 1 {
