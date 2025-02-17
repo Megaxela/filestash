@@ -36,7 +36,7 @@ type MinioBackend struct {
 }
 
 func init() {
-	Backend.Register("s3", MinioBackend{})
+	Backend.Register("minio", MinioBackend{})
 	MinioCache = NewAppCache(2, 1)
 }
 
