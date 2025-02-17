@@ -41,14 +41,17 @@ func init() {
 }
 
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
+     Log.Info("[minio] Initializing");
 	// Performing minio ldap authentication
 	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
 	if err != nil {
+        Log.Error(fmt.Sprintf("[minio] Unable to identify: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
 	}
 
 	v, err := li.GetWithContext(nil)
 	if err != nil {
+        Log.Error(fmt.Sprintf("[minio] Unable to get with context: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to retrieve STS credentials: %v", err), 400);
 	}
 
