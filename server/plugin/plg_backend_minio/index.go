@@ -43,7 +43,7 @@ func init() {
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
     Log.Info(fmt.Sprintf("[minio] Initializing: %s %s", params["username"], params["password"]));
 	// Performing minio ldap authentication
-	li, err := cr.NewLDAPIdentity(fmt.Sprintf("https://%s", params["endpoint"]), params["username"], params["password"])
+	li, err := cr.NewLDAPIdentity(fmt.Sprintf("http://%s", params["endpoint"]), params["username"], params["password"])
 	if err != nil {
         Log.Error(fmt.Sprintf("[minio] Unable to identify: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
@@ -130,7 +130,7 @@ func (this MinioBackend) LoginForm() Form {
 				Placeholder: "Username*",
 			},
 			FormElement{
-				Name:        "secret_access_key",
+				Name:        "password",
 				Type:        "password",
 				Placeholder: "Password*",
 			},
