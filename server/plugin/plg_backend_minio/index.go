@@ -43,7 +43,7 @@ func init() {
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
     Log.Info(fmt.Sprintf("[minio] Initializing: %s %s", params["username"], params["password"]));
 	// Performing minio ldap authentication
-	li, err := cr.NewLDAPIdentity(fmt.Sprintf("http://%s", params["endpoint"]), params["username"], params["password"])
+	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
 	if err != nil {
         Log.Error(fmt.Sprintf("[minio] Unable to identify: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
@@ -61,7 +61,7 @@ func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, err
 
 	params["access_key_id"] = v.AccessKeyID;
 	params["secret_access_key"] = v.SecretAccessKey;
-	// params["session_token"] = v.SessionToken;
+	params["session_token"] = v.SessionToken;
 
 	// Continuing with normal S3 flow
 	if params["encryption_key"] != "" && len(params["encryption_key"]) != 32 {
