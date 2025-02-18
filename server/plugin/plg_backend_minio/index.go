@@ -49,11 +49,15 @@ func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, err
 		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
 	}
 
+    Log.Info("[minio] Identity created");
+
 	v, err := li.GetWithContext(nil)
 	if err != nil {
         Log.Error(fmt.Sprintf("[minio] Unable to get with context: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to retrieve STS credentials: %v", err), 400);
 	}
+
+    Log.Info("[minio] Created keys: %s %s %s", v.AccessKeyID, v.SecretAccessKey, v.SessionToken);
 
 	params["access_key_id"] = v.AccessKeyID;
 	params["secret_access_key"] = v.SecretAccessKey;
