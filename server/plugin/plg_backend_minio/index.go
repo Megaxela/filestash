@@ -41,6 +41,7 @@ func init() {
 }
 
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
+    Log.Info("[minio] Initializing");
 	// Performing minio ldap authentication
 	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
 	if err != nil {
