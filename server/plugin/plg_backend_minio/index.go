@@ -41,7 +41,6 @@ func init() {
 }
 
 func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, error) {
-    Log.Info(fmt.Sprintf("[minio] Initializing: %s %s", params["username"], params["password"]));
 	// Performing minio ldap authentication
 	li, err := cr.NewLDAPIdentity(params["endpoint"], params["username"], params["password"])
 	if err != nil {
@@ -49,15 +48,11 @@ func (this MinioBackend) Init(params map[string]string, app *App) (IBackend, err
 		return nil, NewError(fmt.Sprintf("Unable to create Minio LDAP identity"), 400);
 	}
 
-    Log.Info("[minio] Identity created");
-
 	v, err := li.GetWithContext(nil)
 	if err != nil {
         Log.Error(fmt.Sprintf("[minio] Unable to get with context: %v", err));
 		return nil, NewError(fmt.Sprintf("Unable to retrieve STS credentials: %v", err), 400);
 	}
-
-    Log.Info("[minio] Created keys: %s %s %s", v.AccessKeyID, v.SecretAccessKey, v.SessionToken);
 
 	params["access_key_id"] = v.AccessKeyID;
 	params["secret_access_key"] = v.SecretAccessKey;
@@ -227,7 +222,6 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 		},
 		func(objs *s3.ListObjectsV2Output, lastPage bool) bool {
 			for i, object := range objs.Contents {
-				Log.Info(fmt.Sprintf("Parsed: %s", object.String()));
 				if i == 0 && *object.Key == p.path {
 					continue
 				}
@@ -253,16 +247,44 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 		},
 	)
 
-	// files = make([]os.FileInfo, 0);
+	files_result := make([]os.FileInfo, 0);
 
-	// // Filter out object, that we does not have permission for
-	// for _, file := range files {
-	// 	if (file.IsDir()) {
+	// Filter out object, that we does not have permission for
+	for _, file := range files {
+		if (file.IsDir()) {
+			// Try to list directory
+			err = client.ListObjectsV2PagesWithContext(
+				this.Context,
+				&s3.ListObjectsV2Input{
+					Bucket:    aws.String(p.bucket),
+					Prefix:    aws.String(fmt.Sprintf("%s/%s", p.path, file.Name())),
+					Delimiter: aws.String("/"),
+				},
+				func(objs *s3.ListObjectsV2Output, lastPage bool) bool {
+					files_result = append(files_result, file);
+					return false;
+				},
+			);
 
-	// 	}
-	// }
+			if err != nil {
+				Log.Error(fmt.Sprintf("[minio] Dir Request Error: %v", err));
+			}
 
-	return files, err
+		} else {
+			_, err = client.GetObjectWithContext(this.Context, &s3.GetObjectInput{
+				Bucket: aws.String(p.bucket),
+				Key: aws.String(fmt.Sprintf("%s/%s", p.path, file.Name())),
+			});
+
+			if err != nil {
+				Log.Error(fmt.Sprintf("[minio] File Request Error: %v", err));
+			} else {
+				files_result = append(files_result, file);
+			}
+		}
+	}
+
+	return files_result, err
 }
 
 func (this MinioBackend) Cat(path string) (io.ReadCloser, error) {
