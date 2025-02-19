@@ -227,6 +227,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 		},
 		func(objs *s3.ListObjectsV2Output, lastPage bool) bool {
 			for i, object := range objs.Contents {
+				Log.Info(fmt.Sprintf("Parsed: %s", object.String()));
 				if i == 0 && *object.Key == p.path {
 					continue
 				}
@@ -251,6 +252,16 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 			return aws.BoolValue(objs.IsTruncated)
 		},
 	)
+
+	// files = make([]os.FileInfo, 0);
+
+	// // Filter out object, that we does not have permission for
+	// for _, file := range files {
+	// 	if (file.IsDir()) {
+
+	// 	}
+	// }
+
 	return files, err
 }
 
