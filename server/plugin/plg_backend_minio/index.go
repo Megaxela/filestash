@@ -268,6 +268,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 
 			if err != nil {
 				Log.Error(fmt.Sprintf("[minio] Dir Request Error: %v", err));
+				err = nil;
 			}
 
 		} else {
@@ -278,6 +279,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 
 			if err != nil {
 				Log.Error(fmt.Sprintf("[minio] File Request Error: %v", err));
+				err = nil;
 			} else {
 				files_result = append(files_result, file);
 			}
