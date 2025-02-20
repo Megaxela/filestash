@@ -273,8 +273,8 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 				},
 			);
 
+			// If we encountered permission denied - ignore it.
 			if err != nil {
-				Log.Error(fmt.Sprintf("[minio] Dir Request Error (%s): %v", full_path, err));
 				err = nil;
 			}
 
@@ -284,8 +284,8 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 				Key: aws.String(full_path),
 			});
 
+			// If we encountered permission denied - assuming, that we does not have permissions to see this file.
 			if err != nil {
-				Log.Error(fmt.Sprintf("[minio] File Request Error: %v", err));
 				err = nil;
 			} else {
 				files_result = append(files_result, file);
