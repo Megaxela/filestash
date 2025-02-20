@@ -251,13 +251,15 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 
 	// Filter out object, that we does not have permission for
 	for _, file := range files {
+
 		if (file.IsDir()) {
 			// Try to list directory
+			full_path := fmt.Sprintf("%s/%s", p.path, file.Name());
 			err = client.ListObjectsV2PagesWithContext(
 				this.Context,
 				&s3.ListObjectsV2Input{
 					Bucket:    aws.String(p.bucket),
-					Prefix:    aws.String(fmt.Sprintf("%s/%s", p.path, file.Name())),
+					Prefix:    aws.String(full_path),
 					Delimiter: aws.String("/"),
 				},
 				func(objs *s3.ListObjectsV2Output, lastPage bool) bool {
@@ -267,7 +269,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 			);
 
 			if err != nil {
-				Log.Error(fmt.Sprintf("[minio] Dir Request Error: %v", err));
+				Log.Error(fmt.Sprintf("[minio] Dir Request Error (%s): %v", full_path, err));
 				err = nil;
 			}
 
