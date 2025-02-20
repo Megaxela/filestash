@@ -252,9 +252,14 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 	// Filter out object, that we does not have permission for
 	for _, file := range files {
 
+		// Try to list directory
+		full_path := fmt.Sprintf("%s/%s", p.path, file.Name());
+		if len(full_path) == 0 {
+			full_path = file.Name();
+		}
+
 		if (file.IsDir()) {
-			// Try to list directory
-			full_path := fmt.Sprintf("%s/%s", p.path, file.Name());
+
 			err = client.ListObjectsV2PagesWithContext(
 				this.Context,
 				&s3.ListObjectsV2Input{
@@ -276,7 +281,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 		} else {
 			_, err = client.GetObjectWithContext(this.Context, &s3.GetObjectInput{
 				Bucket: aws.String(p.bucket),
-				Key: aws.String(fmt.Sprintf("%s/%s", p.path, file.Name())),
+				Key: aws.String(full_path),
 			});
 
 			if err != nil {
