@@ -259,7 +259,6 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 		}
 
 		if (file.IsDir()) {
-
 			err = client.ListObjectsV2PagesWithContext(
 				this.Context,
 				&s3.ListObjectsV2Input{
@@ -268,28 +267,21 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 					Delimiter: aws.String("/"),
 				},
 				func(objs *s3.ListObjectsV2Output, lastPage bool) bool {
-					files_result = append(files_result, file);
 					return false;
 				},
 			);
-
-			// If we encountered permission denied - ignore it.
-			if err != nil {
-				err = nil;
-			}
-
 		} else {
 			_, err = client.GetObjectWithContext(this.Context, &s3.GetObjectInput{
 				Bucket: aws.String(p.bucket),
 				Key: aws.String(full_path),
 			});
+		}
 
-			// If we encountered permission denied - assuming, that we does not have permissions to see this file.
-			if err != nil {
-				err = nil;
-			} else {
-				files_result = append(files_result, file);
-			}
+		// If we encountered permission denied - ignore it.
+		if err != nil {
+			err = nil;
+		} else {
+			files_result = append(files_result, file);
 		}
 	}
 
