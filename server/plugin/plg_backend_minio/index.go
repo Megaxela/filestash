@@ -279,6 +279,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 
 		// If we encountered permission denied - ignore it.
 		if err != nil {
+			Log.Error("[minio] Received error for path '%s': %v", full_path, err);
 			err = nil;
 		} else {
 			files_result = append(files_result, file);
