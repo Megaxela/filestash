@@ -253,7 +253,7 @@ func (this MinioBackend) Ls(path string) (files []os.FileInfo, err error) {
 	for _, file := range files {
 
 		// Try to list directory
-		full_path := fmt.Sprintf("%s/%s", p.path, file.Name());
+		full_path := fmt.Sprintf("%s%s", p.path, file.Name());
 		if len(p.path) == 0 {
 			full_path = file.Name();
 		}
